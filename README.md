@@ -63,7 +63,7 @@ SportSphere is a comprehensive web application for managing sports facilities, b
 
 4. Configure the database:
    - Create a MySQL database named `sportsphere`
-   - Update the database credentials in `sportsphere/settings.py` if needed (default: username=root, password=Shiva)
+   - Update the database credentials in `sportsphere/settings.py` 
 
 5. Run migrations:
    ```
