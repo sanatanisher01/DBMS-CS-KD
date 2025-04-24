@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Details - SportSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1>Booking Details</h1>
+        <p class="lead">View details of your facility booking.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if booking.status == 'approved' or booking.status == 'pending' %}
+            <a href="{% url 'booking_cancel' booking.id %}" class="btn btn-danger">
+                <i class="bi bi-x-circle"></i> Cancel Booking
+            </a>
+        {% endif %}
+        {% if user.profile.role == 'staff' or user.profile.role == 'admin' %}
+            {% if booking.status == 'pending' %}
+                <a href="{% url 'booking_approve' booking.id %}" class="btn btn-success">
+                    <i class="bi bi-check-circle"></i> Approve/Reject
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Booking #{{ booking.id }}</h5>
+                <span class="badge {% if booking.status == 'approved' %}bg-success{% elif booking.status == 'pending' %}bg-warning text-dark{% elif booking.status == 'rejected' %}bg-danger{% elif booking.status == 'cancelled' %}bg-secondary{% elif booking.status == 'completed' %}bg-info{% endif %}">
+                    {{ booking.get_status_display }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>Booking Information</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Facility:</span>
+                                <span class="text-muted">{{ booking.facility.name }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Location:</span>
+                                <span class="text-muted">{{ booking.facility.location }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Date:</span>
+                                <span class="text-muted">{{ booking.start_time|date:"F j, Y" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Time:</span>
+                                <span class="text-muted">{{ booking.start_time|date:"H:i" }} - {{ booking.end_time|date:"H:i" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Purpose:</span>
+                                <span class="text-muted">{{ booking.purpose }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Participants:</span>
+                                <span class="text-muted">{{ booking.participants }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Status Information</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Booked By:</span>
+                                <span class="text-muted">{{ booking.user.get_full_name|default:booking.user.username }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Booked On:</span>
+                                <span class="text-muted">{{ booking.created_at|date:"F j, Y H:i" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Last Updated:</span>
+                                <span class="text-muted">{{ booking.updated_at|date:"F j, Y H:i" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Status:</span>
+                                <span class="badge {% if booking.status == 'approved' %}bg-success{% elif booking.status == 'pending' %}bg-warning text-dark{% elif booking.status == 'rejected' %}bg-danger{% elif booking.status == 'cancelled' %}bg-secondary{% elif booking.status == 'completed' %}bg-info{% endif %}">
+                                    {{ booking.get_status_display }}
+                                </span>
+                            </li>
+                            {% if booking.usage_logs.all %}
+                                {% with log=booking.usage_logs.first %}
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Check-in Time:</span>
+                                        <span class="text-muted">
+                                            {% if log.check_in_time %}
+                                                {{ log.check_in_time|date:"F j, Y H:i" }}
+                                            {% else %}
+                                                Not checked in
+                                            {% endif %}
+                                        </span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Check-out Time:</span>
+                                        <span class="text-muted">
+                                            {% if log.check_out_time %}
+                                                {{ log.check_out_time|date:"F j, Y H:i" }}
+                                            {% else %}
+                                                Not checked out
+                                            {% endif %}
+                                        </span>
+                                    </li>
+                                {% endwith %}
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                    <a href="{% url 'booking_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Bookings
+                    </a>
+                    {% if booking.status == 'approved' or booking.status == 'pending' %}
+                        <a href="{% url 'booking_cancel' booking.id %}" class="btn btn-danger">
+                            <i class="bi bi-x-circle"></i> Cancel Booking
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

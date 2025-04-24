@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Maintenance Issues - SportSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1>Maintenance Issues</h1>
+        <p class="lead">View and manage maintenance issues for facilities and equipment.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'maintenance_report' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Report New Issue
+        </a>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">All Maintenance Issues</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="btn-group" role="group" aria-label="Maintenance status filter">
+                        <button type="button" class="btn btn-outline-primary active" data-status="all">All</button>
+                        <button type="button" class="btn btn-outline-warning" data-status="reported">Reported</button>
+                        <button type="button" class="btn btn-outline-info" data-status="in_progress">In Progress</button>
+                        <button type="button" class="btn btn-outline-success" data-status="resolved">Resolved</button>
+                    </div>
+                </div>
+                
+                {% if records %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Facility/Equipment</th>
+                                    <th>Issue</th>
+                                    <th>Reported By</th>
+                                    <th>Reported On</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in records %}
+                                    <tr class="maintenance-row" data-status="{{ record.status }}">
+                                        <td>
+                                            {% if record.facility %}
+                                                {{ record.facility.name }}
+                                            {% elif record.equipment %}
+                                                {{ record.equipment.name }} ({{ record.equipment.facility.name }})
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ record.issue_description|truncatechars:50 }}</td>
+                                        <td>{{ record.reported_by.get_full_name|default:record.reported_by.username }}</td>
+                                        <td>{{ record.reported_at|date:"Y-m-d" }}</td>
+                                        <td>
+                                            {% if record.status == 'reported' %}
+                                                <span class="badge bg-warning text-dark">Reported</span>
+                                            {% elif record.status == 'in_progress' %}
+                                                <span class="badge bg-info">In Progress</span>
+                                            {% elif record.status == 'resolved' %}
+                                                <span class="badge bg-success">Resolved</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'maintenance_detail' record.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if user.profile.role == 'staff' or user.profile.role == 'admin' %}
+                                                <a href="{% url 'maintenance_update' record.id %}" class="btn btn-sm btn-outline-info">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <p class="mb-0">No maintenance issues found. <a href="{% url 'maintenance_report' %}">Report a new issue</a>.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusButtons = document.querySelectorAll('.btn-group button');
+        const maintenanceRows = document.querySelectorAll('.maintenance-row');
+        
+        statusButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                // Update active button
+                statusButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                const status = this.dataset.status;
+                
+                // Filter rows
+                maintenanceRows.forEach(function(row) {
+                    if (status === 'all' || row.dataset.status === status) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

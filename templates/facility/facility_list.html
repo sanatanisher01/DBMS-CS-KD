@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Facilities - SportSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1>Sports Facilities</h1>
+        <p class="lead">Browse and book our sports facilities.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if user.is_authenticated and user.profile.role == 'admin' %}
+            <a href="{% url 'facility_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add New Facility
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Filter Facilities</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="type-filter" class="form-label">Facility Type</label>
+                    <select class="form-select" id="type-filter">
+                        <option value="">All Types</option>
+                        <option value="court">Court</option>
+                        <option value="gym">Gym</option>
+                        <option value="pool">Pool</option>
+                        <option value="field">Field</option>
+                        <option value="stadium">Stadium</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="status-filter" class="form-label">Status</label>
+                    <select class="form-select" id="status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="available">Available</option>
+                        <option value="maintenance">Under Maintenance</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="row g-4" id="facilities-container">
+            {% for facility in facilities %}
+                <div class="col-md-6 col-lg-4 facility-card" data-type="{{ facility.type }}" data-status="{{ facility.status }}">
+                    <div class="card h-100 border-0 shadow-sm">
+                        {% if facility.type == 'court' %}
+                            <img src="/static/img/basketball.jpg" class="card-img-top" alt="{{ facility.name }}">
+                        {% elif facility.type == 'gym' %}
+                            <img src="/static/img/gym.jpg" class="card-img-top" alt="{{ facility.name }}">
+                        {% elif facility.type == 'pool' %}
+                            <img src="/static/img/swimming.jpg" class="card-img-top" alt="{{ facility.name }}">
+                        {% else %}
+                            <img src="/static/img/tennis.jpg" class="card-img-top" alt="{{ facility.name }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ facility.name }}</h5>
+                            <p class="card-text">{{ facility.description|truncatechars:100 }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-primary">{{ facility.get_type_display }}</span>
+                                {% if facility.status == 'available' %}
+                                    <span class="badge bg-success">Available</span>
+                                {% elif facility.status == 'maintenance' %}
+                                    <span class="badge bg-warning text-dark">Under Maintenance</span>
+                                {% elif facility.status == 'closed' %}
+                                    <span class="badge bg-danger">Closed</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-0">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'facility_detail' facility.id %}" class="btn btn-outline-primary">View Details</a>
+                                {% if facility.status == 'available' and user.is_authenticated %}
+                                    <a href="{% url 'booking_create' %}?facility={{ facility.id }}" class="btn btn-primary">Book Now</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <p class="mb-0">No facilities available at the moment.</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const typeFilter = document.getElementById('type-filter');
+        const statusFilter = document.getElementById('status-filter');
+        const facilitiesContainer = document.getElementById('facilities-container');
+        const facilityCards = document.querySelectorAll('.facility-card');
+        
+        function filterFacilities() {
+            const typeValue = typeFilter.value;
+            const statusValue = statusFilter.value;
+            
+            facilityCards.forEach(function(card) {
+                const type = card.dataset.type;
+                const status = card.dataset.status;
+                
+                const typeMatch = !typeValue || type === typeValue;
+                const statusMatch = !statusValue || status === statusValue;
+                
+                if (typeMatch && statusMatch) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        typeFilter.addEventListener('change', filterFacilities);
+        statusFilter.addEventListener('change', filterFacilities);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ facility.name }} - SportSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1>{{ facility.name }}</h1>
+        <p class="lead">{{ facility.get_type_display }} - {{ facility.location }}</p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if user.is_authenticated and user.profile.role == 'admin' %}
+            <a href="{% url 'facility_update' facility.id %}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Edit Facility
+            </a>
+        {% endif %}
+        {% if facility.status == 'available' and user.is_authenticated %}
+            <a href="{% url 'booking_create' %}?facility={{ facility.id }}" class="btn btn-success">
+                <i class="bi bi-calendar-plus"></i> Book Now
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Facility Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        {% if facility.type == 'court' %}
+                            <img src="/static/img/basketball.jpg" class="img-fluid rounded mb-3" alt="{{ facility.name }}">
+                        {% elif facility.type == 'gym' %}
+                            <img src="/static/img/gym.jpg" class="img-fluid rounded mb-3" alt="{{ facility.name }}">
+                        {% elif facility.type == 'pool' %}
+                            <img src="/static/img/swimming.jpg" class="img-fluid rounded mb-3" alt="{{ facility.name }}">
+                        {% else %}
+                            <img src="/static/img/tennis.jpg" class="img-fluid rounded mb-3" alt="{{ facility.name }}">
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Details</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Type:</span>
+                                <span class="badge bg-primary">{{ facility.get_type_display }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Location:</span>
+                                <span>{{ facility.location }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Capacity:</span>
+                                <span>{{ facility.capacity|default:"Not specified" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Status:</span>
+                                {% if facility.status == 'available' %}
+                                    <span class="badge bg-success">Available</span>
+                                {% elif facility.status == 'maintenance' %}
+                                    <span class="badge bg-warning text-dark">Under Maintenance</span>
+                                {% elif facility.status == 'closed' %}
+                                    <span class="badge bg-danger">Closed</span>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <h5 class="mt-4">Description</h5>
+                <p>{{ facility.description|default:"No description available." }}</p>
+                
+                {% if user.is_authenticated %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
+                        {% if facility.status == 'available' %}
+                            <a href="{% url 'booking_create' %}?facility={{ facility.id }}" class="btn btn-primary">
+                                <i class="bi bi-calendar-plus"></i> Book This Facility
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'maintenance_report' %}?facility={{ facility.id }}" class="btn btn-outline-warning">
+                            <i class="bi bi-exclamation-triangle"></i> Report an Issue
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info mt-4">
+                        <p class="mb-0">Please <a href="{% url 'login' %}">login</a> to book this facility or report issues.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Equipment</h5>
+            </div>
+            <div class="card-body">
+                {% if equipment %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in equipment %}
+                                    <tr>
+                                        <td>{{ item.name }}</td>
+                                        <td>{{ item.get_type_display }}</td>
+                                        <td>
+                                            {% if item.status == 'available' %}
+                                                <span class="badge bg-success">Available</span>
+                                            {% elif item.status == 'maintenance' %}
+                                                <span class="badge bg-warning text-dark">Under Maintenance</span>
+                                            {% elif item.status == 'in_use' %}
+                                                <span class="badge bg-info">In Use</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No equipment available for this facility.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Upcoming Bookings</h5>
+            </div>
+            <div class="card-body">
+                {% if bookings %}
+                    <div class="list-group">
+                        {% for booking in bookings %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ booking.start_time|date:"F j, Y" }}</h6>
+                                    <small>
+                                        {% if booking.status == 'approved' %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% elif booking.status == 'pending' %}
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <p class="mb-1">{{ booking.start_time|date:"H:i" }} - {{ booking.end_time|date:"H:i" }}</p>
+                                <small>{{ booking.purpose|truncatechars:50 }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No upcoming bookings for this facility.</p>
+                {% endif %}
+                
+                {% if facility.status == 'available' and user.is_authenticated %}
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{% url 'booking_create' %}?facility={{ facility.id }}" class="btn btn-primary">
+                            <i class="bi bi-calendar-plus"></i> Book This Facility
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Location</h5>
+            </div>
+            <div class="card-body">
+                <p><i class="bi bi-geo-alt"></i> {{ facility.location }}</p>
+                <div class="ratio ratio-4x3">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.2176767606308!2d-73.98823492426285!3d40.74844097138946!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259a9b3117469%3A0xd134e199a405a163!2sEmpire%20State%20Building!5e0!3m2!1sen!2sus!4v1682458116314!5m2!1sen!2sus" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

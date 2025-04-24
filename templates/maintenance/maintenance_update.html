@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Update Maintenance Issue - SportSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Update Maintenance Issue</h1>
+        <p class="lead">Update the status and resolution of the maintenance issue.</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Issue #{{ record.id }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h5>Issue Information</h5>
+                        <ul class="list-group list-group-flush mb-4">
+                            {% if record.facility %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Facility:</span>
+                                    <span class="text-muted">{{ record.facility.name }}</span>
+                                </li>
+                            {% endif %}
+                            {% if record.equipment %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Equipment:</span>
+                                    <span class="text-muted">{{ record.equipment.name }}</span>
+                                </li>
+                            {% endif %}
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Reported By:</span>
+                                <span class="text-muted">{{ record.reported_by.get_full_name|default:record.reported_by.username }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Reported On:</span>
+                                <span class="text-muted">{{ record.reported_at|date:"F j, Y H:i" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Current Status:</span>
+                                <span class="badge {% if record.status == 'reported' %}bg-warning text-dark{% elif record.status == 'in_progress' %}bg-info{% elif record.status == 'resolved' %}bg-success{% endif %}">
+                                    {{ record.get_status_display }}
+                                </span>
+                            </li>
+                        </ul>
+                        
+                        <h5>Issue Description</h5>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <p>{{ record.issue_description }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_status" class="form-label">Update Status</label>
+                        <select class="form-select {% if form.status.errors %}is-invalid{% endif %}" id="id_status" name="status" required>
+                            {% for value, label in form.fields.status.choices %}
+                                <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if form.status.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.status.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_resolution_notes" class="form-label">Resolution Notes</label>
+                        <textarea class="form-control {% if form.resolution_notes.errors %}is-invalid{% endif %}" id="id_resolution_notes" name="resolution_notes" rows="5">{{ form.resolution_notes.value|default:'' }}</textarea>
+                        {% if form.resolution_notes.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.resolution_notes.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Please provide details about the resolution or progress of this issue.</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                        <a href="{% url 'maintenance_detail' record.id %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Update Issue</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

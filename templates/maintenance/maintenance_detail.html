@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Maintenance Issue Details - SportSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1>Maintenance Issue Details</h1>
+        <p class="lead">View details of the reported maintenance issue.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if user.profile.role == 'staff' or user.profile.role == 'admin' %}
+            <a href="{% url 'maintenance_update' record.id %}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Update Status
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Issue #{{ record.id }}</h5>
+                <span class="badge {% if record.status == 'reported' %}bg-warning text-dark{% elif record.status == 'in_progress' %}bg-info{% elif record.status == 'resolved' %}bg-success{% endif %}">
+                    {{ record.get_status_display }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>Issue Information</h5>
+                        <ul class="list-group list-group-flush">
+                            {% if record.facility %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Facility:</span>
+                                    <span class="text-muted">{{ record.facility.name }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Location:</span>
+                                    <span class="text-muted">{{ record.facility.location }}</span>
+                                </li>
+                            {% endif %}
+                            {% if record.equipment %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Equipment:</span>
+                                    <span class="text-muted">{{ record.equipment.name }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Facility:</span>
+                                    <span class="text-muted">{{ record.equipment.facility.name }}</span>
+                                </li>
+                            {% endif %}
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Reported By:</span>
+                                <span class="text-muted">{{ record.reported_by.get_full_name|default:record.reported_by.username }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Reported On:</span>
+                                <span class="text-muted">{{ record.reported_at|date:"F j, Y H:i" }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Status Information</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Current Status:</span>
+                                <span class="badge {% if record.status == 'reported' %}bg-warning text-dark{% elif record.status == 'in_progress' %}bg-info{% elif record.status == 'resolved' %}bg-success{% endif %}">
+                                    {{ record.get_status_display }}
+                                </span>
+                            </li>
+                            {% if record.status == 'resolved' %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Resolved On:</span>
+                                    <span class="text-muted">{{ record.resolved_at|date:"F j, Y H:i" }}</span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+                
+                <h5>Issue Description</h5>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <p>{{ record.issue_description }}</p>
+                    </div>
+                </div>
+                
+                {% if record.resolution_notes %}
+                    <h5>Resolution Notes</h5>
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <p>{{ record.resolution_notes }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                    <a href="{% url 'maintenance_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Maintenance Issues
+                    </a>
+                    {% if user.profile.role == 'staff' or user.profile.role == 'admin' %}
+                        <a href="{% url 'maintenance_update' record.id %}" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Update Status
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

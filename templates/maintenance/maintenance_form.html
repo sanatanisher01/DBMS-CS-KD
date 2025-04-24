@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - SportSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>{{ title }}</h1>
+        <p class="lead">Report any issues with facilities or equipment.</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Issue Report Form</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="maintenance-form">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_facility" class="form-label">Facility</label>
+                        <select class="form-select {% if form.facility.errors %}is-invalid{% endif %}" id="id_facility" name="facility">
+                            <option value="">Select a facility (optional)</option>
+                            {% for facility in form.fields.facility.queryset %}
+                                <option value="{{ facility.id }}" {% if form.facility.value|stringformat:"i" == facility.id|stringformat:"i" %}selected{% endif %}>
+                                    {{ facility.name }} ({{ facility.location }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.facility.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.facility.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Select a facility or equipment (at least one is required)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_equipment" class="form-label">Equipment</label>
+                        <select class="form-select {% if form.equipment.errors %}is-invalid{% endif %}" id="id_equipment" name="equipment" {% if not form.equipment.value %}disabled{% endif %}>
+                            <option value="">Select equipment (optional)</option>
+                            {% if form.equipment.value %}
+                                {% for equipment in form.fields.equipment.queryset %}
+                                    {% if equipment.id == form.equipment.value %}
+                                        <option value="{{ equipment.id }}" selected>{{ equipment.name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                        {% if form.equipment.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.equipment.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_issue_description" class="form-label">Issue Description</label>
+                        <textarea class="form-control {% if form.issue_description.errors %}is-invalid{% endif %}" id="id_issue_description" name="issue_description" rows="5" required>{{ form.issue_description.value|default:'' }}</textarea>
+                        {% if form.issue_description.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.issue_description.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'maintenance_list' %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Submit Report</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const facilitySelect = document.getElementById('id_facility');
+        const equipmentSelect = document.getElementById('id_equipment');
+        
+        facilitySelect.addEventListener('change', function() {
+            const facilityId = this.value;
+            
+            if (!facilityId) {
+                equipmentSelect.innerHTML = '<option value="">Select equipment (optional)</option>';
+                equipmentSelect.disabled = true;
+                return;
+            }
+            
+            // Fetch equipment for selected facility
+            fetch(`/api/facility/${facilityId}/equipment/`)
+                .then(response => response.json())
+                .then(data => {
+                    // Clear current options
+                    equipmentSelect.innerHTML = '<option value="">Select equipment (optional)</option>';
+                    
+                    // Add new options
+                    data.forEach(equipment => {
+                        const option = document.createElement('option');
+                        option.value = equipment.id;
+                        option.textContent = equipment.name;
+                        equipmentSelect.appendChild(option);
+                    });
+                    
+                    equipmentSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to load equipment. Please try again.');
+                });
+        });
+        
+        // Form validation
+        const form = document.getElementById('maintenance-form');
+        form.addEventListener('submit', function(event) {
+            const facilityValue = facilitySelect.value;
+            const equipmentValue = equipmentSelect.value;
+            
+            if (!facilityValue && !equipmentValue) {
+                event.preventDefault();
+                alert('You must select either a facility or equipment');
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - SportSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Welcome, {{ user.first_name }}</h1>
+        <p class="lead">Your personal dashboard for managing sports facility bookings.</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'booking_create' %}" class="btn btn-primary">
+                        <i class="bi bi-calendar-plus"></i> Book a Facility
+                    </a>
+                    <a href="{% url 'booking_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-calendar-check"></i> View My Bookings
+                    </a>
+                    <a href="{% url 'maintenance_report' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-exclamation-triangle"></i> Report an Issue
+                    </a>
+                    <a href="{% url 'facility_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-building"></i> Browse Facilities
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Upcoming Bookings</h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_bookings %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Facility</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in upcoming_bookings %}
+                                    <tr>
+                                        <td>{{ booking.facility.name }}</td>
+                                        <td>{{ booking.start_time|date:"Y-m-d" }}</td>
+                                        <td>{{ booking.start_time|date:"H:i" }} - {{ booking.end_time|date:"H:i" }}</td>
+                                        <td>
+                                            {% if booking.status == 'approved' %}
+                                                <span class="badge bg-success">Approved</span>
+                                            {% elif booking.status == 'pending' %}
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                            {% elif booking.status == 'rejected' %}
+                                                <span class="badge bg-danger">Rejected</span>
+                                            {% elif booking.status == 'cancelled' %}
+                                                <span class="badge bg-secondary">Cancelled</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if booking.status == 'approved' or booking.status == 'pending' %}
+                                                <a href="{% url 'booking_cancel' booking.id %}" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <p class="mb-0">You don't have any upcoming bookings. <a href="{% url 'booking_create' %}">Book a facility now</a>.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Recent Maintenance Reports</h5>
+            </div>
+            <div class="card-body">
+                {% if maintenance_reports %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Facility/Equipment</th>
+                                    <th>Issue</th>
+                                    <th>Reported On</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in maintenance_reports %}
+                                    <tr>
+                                        <td>
+                                            {% if report.facility %}
+                                                {{ report.facility.name }}
+                                            {% endif %}
+                                            {% if report.equipment %}
+                                                ({{ report.equipment.name }})
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ report.issue_description|truncatechars:50 }}</td>
+                                        <td>{{ report.reported_at|date:"Y-m-d" }}</td>
+                                        <td>
+                                            {% if report.status == 'reported' %}
+                                                <span class="badge bg-warning text-dark">Reported</span>
+                                            {% elif report.status == 'in_progress' %}
+                                                <span class="badge bg-info">In Progress</span>
+                                            {% elif report.status == 'resolved' %}
+                                                <span class="badge bg-success">Resolved</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <p class="mb-0">You haven't reported any maintenance issues.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

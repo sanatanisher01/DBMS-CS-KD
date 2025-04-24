@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bookings - SportSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1>My Bookings</h1>
+        <p class="lead">View and manage your facility bookings.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'booking_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> New Booking
+        </a>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">All Bookings</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="btn-group" role="group" aria-label="Booking status filter">
+                        <button type="button" class="btn btn-outline-primary active" data-status="all">All</button>
+                        <button type="button" class="btn btn-outline-warning" data-status="pending">Pending</button>
+                        <button type="button" class="btn btn-outline-success" data-status="approved">Approved</button>
+                        <button type="button" class="btn btn-outline-danger" data-status="rejected">Rejected</button>
+                        <button type="button" class="btn btn-outline-secondary" data-status="cancelled">Cancelled</button>
+                        <button type="button" class="btn btn-outline-info" data-status="completed">Completed</button>
+                    </div>
+                </div>
+                
+                {% if bookings %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Facility</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Purpose</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in bookings %}
+                                    <tr class="booking-row" data-status="{{ booking.status }}">
+                                        <td>{{ booking.facility.name }}</td>
+                                        <td>{{ booking.start_time|date:"Y-m-d" }}</td>
+                                        <td>{{ booking.start_time|date:"H:i" }} - {{ booking.end_time|date:"H:i" }}</td>
+                                        <td>{{ booking.purpose|truncatechars:30 }}</td>
+                                        <td>
+                                            {% if booking.status == 'approved' %}
+                                                <span class="badge bg-success">Approved</span>
+                                            {% elif booking.status == 'pending' %}
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                            {% elif booking.status == 'rejected' %}
+                                                <span class="badge bg-danger">Rejected</span>
+                                            {% elif booking.status == 'cancelled' %}
+                                                <span class="badge bg-secondary">Cancelled</span>
+                                            {% elif booking.status == 'completed' %}
+                                                <span class="badge bg-info">Completed</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if booking.status == 'approved' or booking.status == 'pending' %}
+                                                <a href="{% url 'booking_cancel' booking.id %}" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <p class="mb-0">No bookings found. <a href="{% url 'booking_create' %}">Book a facility now</a>.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusButtons = document.querySelectorAll('.btn-group button');
+        const bookingRows = document.querySelectorAll('.booking-row');
+        
+        statusButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                // Update active button
+                statusButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                const status = this.dataset.status;
+                
+                // Filter rows
+                bookingRows.forEach(function(row) {
+                    if (status === 'all' || row.dataset.status === status) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

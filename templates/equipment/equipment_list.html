@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Equipment - SportSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1>Equipment Inventory</h1>
+        <p class="lead">View and manage equipment for all facilities.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'equipment_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add New Equipment
+        </a>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Filter Equipment</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="facility-filter" class="form-label">Facility</label>
+                    <select class="form-select" id="facility-filter">
+                        <option value="">All Facilities</option>
+                        {% for facility in facilities %}
+                            <option value="{{ facility.id }}">{{ facility.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="type-filter" class="form-label">Equipment Type</label>
+                    <select class="form-select" id="type-filter">
+                        <option value="">All Types</option>
+                        <option value="fixed">Fixed Equipment</option>
+                        <option value="movable">Movable Equipment</option>
+                        <option value="electronic">Electronic Equipment</option>
+                        <option value="sports">Sports Equipment</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="status-filter" class="form-label">Status</label>
+                    <select class="form-select" id="status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="available">Available</option>
+                        <option value="maintenance">Under Maintenance</option>
+                        <option value="in_use">In Use</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Equipment List</h5>
+            </div>
+            <div class="card-body">
+                {% if equipment %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Facility</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Last Maintenance</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in equipment %}
+                                    <tr class="equipment-row" data-facility="{{ item.facility.id }}" data-type="{{ item.type }}" data-status="{{ item.status }}">
+                                        <td>{{ item.name }}</td>
+                                        <td>{{ item.facility.name }}</td>
+                                        <td>{{ item.get_type_display }}</td>
+                                        <td>
+                                            {% if item.status == 'available' %}
+                                                <span class="badge bg-success">Available</span>
+                                            {% elif item.status == 'maintenance' %}
+                                                <span class="badge bg-warning text-dark">Under Maintenance</span>
+                                            {% elif item.status == 'in_use' %}
+                                                <span class="badge bg-info">In Use</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ item.last_maintenance_date|default:"Never" }}</td>
+                                        <td>
+                                            <a href="{% url 'equipment_detail' item.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{% url 'equipment_update' item.id %}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'maintenance_report' %}?equipment={{ item.id }}" class="btn btn-sm btn-outline-warning">
+                                                <i class="bi bi-exclamation-triangle"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <p class="mb-0">No equipment found. <a href="{% url 'equipment_create' %}">Add new equipment</a>.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const facilityFilter = document.getElementById('facility-filter');
+        const typeFilter = document.getElementById('type-filter');
+        const statusFilter = document.getElementById('status-filter');
+        const equipmentRows = document.querySelectorAll('.equipment-row');
+        
+        function filterEquipment() {
+            const facilityValue = facilityFilter.value;
+            const typeValue = typeFilter.value;
+            const statusValue = statusFilter.value;
+            
+            equipmentRows.forEach(function(row) {
+                const facilityMatch = !facilityValue || row.dataset.facility === facilityValue;
+                const typeMatch = !typeValue || row.dataset.type === typeValue;
+                const statusMatch = !statusValue || row.dataset.status === statusValue;
+                
+                if (facilityMatch && typeMatch && statusMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        facilityFilter.addEventListener('change', filterEquipment);
+        typeFilter.addEventListener('change', filterEquipment);
+        statusFilter.addEventListener('change', filterEquipment);
+    });
+</script>
+{% endblock %}

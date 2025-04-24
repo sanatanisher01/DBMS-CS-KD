@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - SportSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>{{ title }}</h1>
+        <p class="lead">Reserve a sports facility for your activity.</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Booking Form</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="booking-form">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_facility" class="form-label">Facility</label>
+                        <select class="form-select {% if form.facility.errors %}is-invalid{% endif %}" id="id_facility" name="facility" required>
+                            <option value="">Select a facility</option>
+                            {% for facility in form.fields.facility.queryset %}
+                                {% if facility.status == 'available' %}
+                                    <option value="{{ facility.id }}" {% if form.facility.value|stringformat:"i" == facility.id|stringformat:"i" %}selected{% endif %}>
+                                        {{ facility.name }} ({{ facility.location }})
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        {% if form.facility.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.facility.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_start_time" class="form-label">Start Time</label>
+                                <input type="datetime-local" class="form-control {% if form.start_time.errors %}is-invalid{% endif %}" id="id_start_time" name="start_time" value="{{ form.start_time.value|date:'Y-m-d\TH:i' }}" required>
+                                {% if form.start_time.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.start_time.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_end_time" class="form-label">End Time</label>
+                                <input type="datetime-local" class="form-control {% if form.end_time.errors %}is-invalid{% endif %}" id="id_end_time" name="end_time" value="{{ form.end_time.value|date:'Y-m-d\TH:i' }}" required>
+                                {% if form.end_time.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.end_time.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_purpose" class="form-label">Purpose</label>
+                        <input type="text" class="form-control {% if form.purpose.errors %}is-invalid{% endif %}" id="id_purpose" name="purpose" value="{{ form.purpose.value|default:'' }}" placeholder="e.g., Basketball practice, Tennis match, etc." required>
+                        {% if form.purpose.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.purpose.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_participants" class="form-label">Number of Participants</label>
+                        <input type="number" class="form-control {% if form.participants.errors %}is-invalid{% endif %}" id="id_participants" name="participants" value="{{ form.participants.value|default:'1' }}" min="1" required>
+                        {% if form.participants.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.participants.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-info" id="availability-message" style="display: none;"></div>
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                        <button type="button" class="btn btn-secondary" id="check-availability-btn">Check Availability</button>
+                        <div>
+                            <a href="{% url 'booking_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary" id="submit-booking-btn">Book Now</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

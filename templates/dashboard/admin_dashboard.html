@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - SportSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Admin Dashboard</h1>
+        <p class="lead">System overview and management.</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Admin Menu</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{% url 'admin:index' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-speedometer2"></i> Django Admin
+                    </a>
+                    <a href="{% url 'facility_list' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-building"></i> Manage Facilities
+                    </a>
+                    <a href="{% url 'equipment_list' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-tools"></i> Manage Equipment
+                    </a>
+                    <a href="{% url 'booking_list' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-calendar-check"></i> Manage Bookings
+                    </a>
+                    <a href="{% url 'maintenance_list' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-exclamation-triangle"></i> Maintenance Issues
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card mb-4 dashboard-stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Total Users</h6>
+                                <h3>{{ total_users }}</h3>
+                            </div>
+                            <i class="bi bi-people text-primary stat-icon"></i>
+                        </div>
+                        <a href="{% url 'admin:auth_user_changelist' %}" class="btn btn-sm btn-outline-primary mt-3">Manage Users</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-4 dashboard-stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Facilities</h6>
+                                <h3>{{ total_facilities }}</h3>
+                            </div>
+                            <i class="bi bi-building text-primary stat-icon"></i>
+                        </div>
+                        <a href="{% url 'facility_list' %}" class="btn btn-sm btn-outline-primary mt-3">Manage Facilities</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-4 dashboard-stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Equipment</h6>
+                                <h3>{{ total_equipment }}</h3>
+                            </div>
+                            <i class="bi bi-tools text-primary stat-icon"></i>
+                        </div>
+                        <a href="{% url 'equipment_list' %}" class="btn btn-sm btn-outline-primary mt-3">Manage Equipment</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-4 dashboard-stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Bookings</h6>
+                                <h3>{{ total_bookings }}</h3>
+                            </div>
+                            <i class="bi bi-calendar-check text-primary stat-icon"></i>
+                        </div>
+                        <a href="{% url 'booking_list' %}" class="btn btn-sm btn-outline-primary mt-3">View Bookings</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Facilities Under Maintenance</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if maintenance_facilities %}
+                            <div class="list-group">
+                                {% for facility in maintenance_facilities %}
+                                    <a href="{% url 'facility_detail' facility.id %}" class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">{{ facility.name }}</h6>
+                                            <small class="text-muted">{{ facility.location }}</small>
+                                        </div>
+                                        <p class="mb-1">{{ facility.description|truncatechars:100 }}</p>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <p class="mb-0">No facilities are currently under maintenance.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Maintenance Issues by Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Status</th>
+                                        <th>Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in maintenance_by_status %}
+                                        <tr>
+                                            <td>
+                                                {% if item.status == 'reported' %}
+                                                    <span class="badge bg-warning text-dark">Reported</span>
+                                                {% elif item.status == 'in_progress' %}
+                                                    <span class="badge bg-info">In Progress</span>
+                                                {% elif item.status == 'resolved' %}
+                                                    <span class="badge bg-success">Resolved</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ item.count }}</td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="2">No maintenance issues found.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Recent Bookings</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_bookings %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Facility</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for booking in recent_bookings %}
+                                            <tr>
+                                                <td>{{ booking.user.get_full_name|default:booking.user.username }}</td>
+                                                <td>{{ booking.facility.name }}</td>
+                                                <td>{{ booking.start_time|date:"Y-m-d" }}</td>
+                                                <td>
+                                                    {% if booking.status == 'approved' %}
+                                                        <span class="badge bg-success">Approved</span>
+                                                    {% elif booking.status == 'pending' %}
+                                                        <span class="badge bg-warning text-dark">Pending</span>
+                                                    {% elif booking.status == 'rejected' %}
+                                                        <span class="badge bg-danger">Rejected</span>
+                                                    {% elif booking.status == 'cancelled' %}
+                                                        <span class="badge bg-secondary">Cancelled</span>
+                                                    {% elif booking.status == 'completed' %}
+                                                        <span class="badge bg-info">Completed</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <p class="mb-0">No recent bookings found.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="d-grid">
+                                    <a href="{% url 'facility_create' %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-plus-circle"></i> Add Facility
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-grid">
+                                    <a href="{% url 'equipment_create' %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-plus-circle"></i> Add Equipment
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-grid">
+                                    <a href="{% url 'admin:auth_user_add' %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-person-plus"></i> Add User
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-grid">
+                                    <a href="{% url 'maintenance_report' %}" class="btn btn-outline-warning">
+                                        <i class="bi bi-exclamation-triangle"></i> Report Issue
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

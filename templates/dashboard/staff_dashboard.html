@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Dashboard - SportSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Staff Dashboard</h1>
+        <p class="lead">Manage bookings, equipment, and maintenance issues.</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'booking_list' %}" class="btn btn-primary">
+                        <i class="bi bi-calendar-check"></i> Manage Bookings
+                    </a>
+                    <a href="{% url 'equipment_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-tools"></i> Manage Equipment
+                    </a>
+                    <a href="{% url 'maintenance_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-exclamation-triangle"></i> Maintenance Issues
+                    </a>
+                    <a href="{% url 'facility_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-building"></i> View Facilities
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card mb-4 dashboard-stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Pending Bookings</h6>
+                                <h3>{{ pending_bookings.count }}</h3>
+                            </div>
+                            <i class="bi bi-calendar-plus text-primary stat-icon"></i>
+                        </div>
+                        <a href="{% url 'booking_list' %}" class="btn btn-sm btn-outline-primary mt-3">View All</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4 dashboard-stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Today's Bookings</h6>
+                                <h3>{{ today_bookings.count }}</h3>
+                            </div>
+                            <i class="bi bi-calendar-date text-primary stat-icon"></i>
+                        </div>
+                        <a href="{% url 'booking_list' %}" class="btn btn-sm btn-outline-primary mt-3">View All</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4 dashboard-stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Active Issues</h6>
+                                <h3>{{ active_issues.count }}</h3>
+                            </div>
+                            <i class="bi bi-exclamation-triangle text-primary stat-icon"></i>
+                        </div>
+                        <a href="{% url 'maintenance_list' %}" class="btn btn-sm btn-outline-primary mt-3">View All</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Pending Bookings</h5>
+            </div>
+            <div class="card-body">
+                {% if pending_bookings %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Facility</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Purpose</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in pending_bookings|slice:":5" %}
+                                    <tr>
+                                        <td>{{ booking.user.get_full_name|default:booking.user.username }}</td>
+                                        <td>{{ booking.facility.name }}</td>
+                                        <td>{{ booking.start_time|date:"Y-m-d" }}</td>
+                                        <td>{{ booking.start_time|date:"H:i" }} - {{ booking.end_time|date:"H:i" }}</td>
+                                        <td>{{ booking.purpose|truncatechars:30 }}</td>
+                                        <td>
+                                            <a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{% url 'booking_approve' booking.id %}" class="btn btn-sm btn-outline-success">
+                                                <i class="bi bi-check-circle"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if pending_bookings.count > 5 %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'booking_list' %}" class="btn btn-outline-primary">View All Pending Bookings</a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <p class="mb-0">No pending bookings at the moment.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Today's Bookings</h5>
+            </div>
+            <div class="card-body">
+                {% if today_bookings %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Facility</th>
+                                    <th>Time</th>
+                                    <th>Purpose</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in today_bookings|slice:":5" %}
+                                    <tr>
+                                        <td>{{ booking.user.get_full_name|default:booking.user.username }}</td>
+                                        <td>{{ booking.facility.name }}</td>
+                                        <td>{{ booking.start_time|date:"H:i" }} - {{ booking.end_time|date:"H:i" }}</td>
+                                        <td>{{ booking.purpose|truncatechars:30 }}</td>
+                                        <td>
+                                            <span class="badge bg-success">Approved</span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if today_bookings.count > 5 %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'booking_list' %}" class="btn btn-outline-primary">View All Today's Bookings</a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <p class="mb-0">No bookings scheduled for today.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Active Maintenance Issues</h5>
+            </div>
+            <div class="card-body">
+                {% if active_issues %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Facility/Equipment</th>
+                                    <th>Issue</th>
+                                    <th>Reported By</th>
+                                    <th>Reported On</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for issue in active_issues|slice:":5" %}
+                                    <tr>
+                                        <td>
+                                            {% if issue.facility %}
+                                                {{ issue.facility.name }}
+                                            {% elif issue.equipment %}
+                                                {{ issue.equipment.name }} ({{ issue.equipment.facility.name }})
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ issue.issue_description|truncatechars:30 }}</td>
+                                        <td>{{ issue.reported_by.get_full_name|default:issue.reported_by.username }}</td>
+                                        <td>{{ issue.reported_at|date:"Y-m-d" }}</td>
+                                        <td>
+                                            {% if issue.status == 'reported' %}
+                                                <span class="badge bg-warning text-dark">Reported</span>
+                                            {% elif issue.status == 'in_progress' %}
+                                                <span class="badge bg-info">In Progress</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'maintenance_detail' issue.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{% url 'maintenance_update' issue.id %}" class="btn btn-sm btn-outline-info">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if active_issues.count > 5 %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'maintenance_list' %}" class="btn btn-outline-primary">View All Active Issues</a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <p class="mb-0">No active maintenance issues at the moment.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

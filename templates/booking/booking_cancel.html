@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Cancel Booking - SportSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Cancel Booking</h1>
+        <p class="lead">Are you sure you want to cancel this booking?</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6 mx-auto">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Confirm Cancellation</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <p><strong>Warning:</strong> This action cannot be undone. Once cancelled, you will need to create a new booking if you wish to use this facility.</p>
+                </div>
+                
+                <h5>Booking Details</h5>
+                <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Facility:</span>
+                        <span class="text-muted">{{ booking.facility.name }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Date:</span>
+                        <span class="text-muted">{{ booking.start_time|date:"F j, Y" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Time:</span>
+                        <span class="text-muted">{{ booking.start_time|date:"H:i" }} - {{ booking.end_time|date:"H:i" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Purpose:</span>
+                        <span class="text-muted">{{ booking.purpose }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Status:</span>
+                        <span class="badge {% if booking.status == 'approved' %}bg-success{% elif booking.status == 'pending' %}bg-warning text-dark{% endif %}">
+                            {{ booking.get_status_display }}
+                        </span>
+                    </li>
+                </ul>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                        <a href="{% url 'booking_detail' booking.id %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Booking
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-x-circle"></i> Cancel Booking
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
